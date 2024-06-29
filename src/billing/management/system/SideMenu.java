@@ -2,17 +2,21 @@ package billing.management.system;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class SideMenu extends JPanel {
 
     public SideMenu() {
         setLayout(null);
 
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int height = screenSize.height;
+        
         ImageIcon i1 = new ImageIcon(ClassLoader.getSystemResource("icons/ray.jpg"));
-        Image i2 = i1.getImage().getScaledInstance(560, 630, Image.SCALE_DEFAULT);
+        Image i2 = i1.getImage().getScaledInstance(560, height, Image.SCALE_DEFAULT);
         ImageIcon i3 = new ImageIcon(i2);
         JLabel image = new JLabel(i3);
-        image.setBounds(0, 0, 300, 630);
+        image.setBounds(0, 0, 300, height);
         add(image);
 
         ImageIcon homeicon = new ImageIcon(ClassLoader.getSystemResource("icons/home.png"));
@@ -38,32 +42,48 @@ public class SideMenu extends JPanel {
         ImageIcon logouticon = new ImageIcon(ClassLoader.getSystemResource("icons/power-off.png"));
         Image logouticon2 = logouticon.getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT);
         ImageIcon logouticon3 = new ImageIcon(logouticon2);
+        
+        
 
         JButton homeButton = new JButton(" Home", homeicon3);
-        homeButton.setBounds(70, 100, 150, 40);
+        homeButton.setBounds(70, 160, 150, 40);
         image.add(homeButton);
 
         JButton customerButton = new JButton(" Customer", customericon3);
-        customerButton.setBounds(70, 170, 150, 40);
+        customerButton.setBounds(70, 230, 150, 40);
         image.add(customerButton);
 
         JButton productButton = new JButton(" Product", producticon3);
-        productButton.setBounds(70, 240, 150, 40);
+        productButton.setBounds(70, 300, 150, 40);
         image.add(productButton);
 
         JButton billingButton = new JButton(" Billing", billingicon3);
-        billingButton.setBounds(70, 310, 150, 40);
+        billingButton.setBounds(70, 370, 150, 40);
         image.add(billingButton);
 
         JButton historyButton = new JButton(" History", historyicon3);
-        historyButton.setBounds(70, 380, 150, 40);
+        historyButton.setBounds(70, 440, 150, 40);
         image.add(historyButton);
 
         JButton logoutButton = new JButton(" Logout", logouticon3);
-        logoutButton.setBounds(70, 450, 150, 40);
+        logoutButton.setBounds(70, 510, 150, 40);
         image.add(logoutButton);
+        
+        homeButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                setVisible(false);
+                new Home().setVisible(true);
+            }
+        });
+        
+        customerButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                setVisible(false);
+                new Customer().setVisible(true);
+            }
+        });
 
-        setPreferredSize(new Dimension(300, 630));
+        setPreferredSize(new Dimension(300, height));
         add(image);
     }
 }

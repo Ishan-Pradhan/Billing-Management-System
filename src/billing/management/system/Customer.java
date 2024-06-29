@@ -5,7 +5,9 @@
  */
 package billing.management.system;
 
+import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.Toolkit;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -19,13 +21,23 @@ public class Customer extends JFrame {
     Customer(){
         setLayout(null);
 
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = screenSize.width;
+        int height = screenSize.height;
+
         SideMenu sideMenu = new SideMenu();
-        sideMenu.setBounds(0, 0, 300, 630);
+        System.out.print(height);
+        sideMenu.setBounds(0, 0, 300, height);
         add(sideMenu);
 
+        JLabel welcome = new JLabel("welcome customer");
+        welcome.setBounds(400, 40, 500, 50);
+        add(welcome);
+        
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1120, 630);
+        setSize(width, height);
         setLocation(150, 50);
+        setLocationRelativeTo(null);
         setVisible(true);
 
     }

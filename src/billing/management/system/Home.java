@@ -2,7 +2,6 @@ package billing.management.system;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.sql.*;
 
 public class Home extends JFrame {
@@ -10,14 +9,25 @@ public class Home extends JFrame {
     Home() {
         setLayout(null);
 
-         SideMenu sideMenu = new SideMenu();
-        sideMenu.setBounds(0, 0, 300, 630);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int width = screenSize.width;
+        int height = screenSize.height;
+
+        SideMenu sideMenu = new SideMenu();
+        System.out.print(height);
+        sideMenu.setBounds(0, 0, 300, height);
         add(sideMenu);
+
+        JLabel welcome = new JLabel("welcome");
+        welcome.setBounds(400, 40, 500, 50);
+        add(welcome);
         
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1120, 630);
+        setSize(width, height);
         setLocation(150, 50);
+        setLocationRelativeTo(null);
         setVisible(true);
+//        setResizable(false);
 
     }
 
