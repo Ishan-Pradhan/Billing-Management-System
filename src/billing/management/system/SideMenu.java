@@ -65,7 +65,7 @@ public class SideMenu extends JPanel {
         historyButton.setBounds(70, 440, 150, 40);
         image.add(historyButton);
 
-        JButton logoutButton = new JButton(" Logout", logouticon3);
+        JButton logoutButton = new JButton(" Close", logouticon3);
         logoutButton.setBounds(70, 510, 150, 40);
         image.add(logoutButton);
         
@@ -80,6 +80,19 @@ public class SideMenu extends JPanel {
             public void actionPerformed(ActionEvent e){
                 setVisible(false);
                 new Customer().setVisible(true);
+            }
+        });
+        
+        productButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                setVisible(false);
+                new Product().setVisible(true);
+            }
+        });
+        
+        logoutButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+               System.exit(0);
             }
         });
 
