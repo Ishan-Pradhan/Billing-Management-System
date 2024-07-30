@@ -90,6 +90,13 @@ public class SideMenu extends JPanel {
             }
         });
         
+        billingButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                setVisible(false);
+                new Billing().setVisible(true);
+            }
+        });
+        
         logoutButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                System.exit(0);

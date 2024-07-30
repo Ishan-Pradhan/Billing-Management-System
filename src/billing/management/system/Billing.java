@@ -350,7 +350,7 @@ public class Billing extends JFrame {
         setVisible(true);
 
         JButton print = new JButton("Print");
-        print.setBounds(1100, 750, 130, 30);
+        print.setBounds(1100, 670, 130, 30);
         add(print);
         print.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -364,7 +364,7 @@ public class Billing extends JFrame {
                 String discount = discountAmtField.getText();
                 String finalAmount = finalAmtField.getText();
 
-                String path = "D:\\";
+                String path = "D://";
                 com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
                 try {
                     PdfWriter.getInstance(doc, new FileOutputStream(path + "" + name + ".pdf"));
