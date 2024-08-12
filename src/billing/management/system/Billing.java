@@ -1,6 +1,10 @@
 package billing.management.system;
 
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.awt.*;
@@ -10,19 +14,15 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileOutputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Vector;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 public class Billing extends JFrame {
@@ -248,41 +248,43 @@ public class Billing extends JFrame {
         add(addButton);
 
         addButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                int price = Integer.parseInt(priceField.getText());
-                int quantity = Integer.parseInt(quantityField.getText());
+    public void actionPerformed(ActionEvent e) {
+        try {
+            // Retrieve and parse values from the text fields
+            int price = Integer.parseInt(priceField.getText());
+            int quantity = Integer.parseInt(quantityField.getText());
+            int totalPrice = price * quantity;
 
-                int totalprice = price * quantity;
+            // Get selected values from the choices
+            String customerName = custname.getSelectedItem();
+            String productName = prodname.getSelectedItem();
 
-                String Name = custname.getSelectedItem();
-                String Product = prodname.getSelectedItem();
-                int Price = price;
-                int Quantity = quantity;
-                int Total = totalprice;
+            // Add a new row to the table
+            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            model.addRow(new Object[]{customerName, productName, price, quantity, totalPrice});
 
-                //Table 
-                ArrayList<Object[]> dataList = new ArrayList<>();
-                Object[][] data = new Object[dataList.size()][];
-                data = dataList.toArray(data);
-
-                // Column names
-                String[] columns = {"Name", "Product", "Price", "Quantity", "Total"};
-
-                // Create a table model
-                DefaultTableModel model = new DefaultTableModel(data, columns);
-
-                table = new JTable(model); // Initializing table
-                model.addRow(new Object[]{Name, Product, price, Quantity, Total});
-                totalField.setText("" + Total);
-                JScrollPane scrollPane = new JScrollPane(table);
-//        scrollPane.setBounds(500,80,900,350);
-                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.setBounds(400, 500, 600, 280);
-                add(scrollPane);
-
+            // Calculate the new total
+            int rowCount = model.getRowCount();
+            int currentTotal = 0;
+            for (int i = 0; i < rowCount; i++) {
+                Object value = model.getValueAt(i, 4); // Column index 4 for "Total"
+                if (value instanceof Number) {
+                    currentTotal += ((Number) value).intValue();
+                }
             }
-        });
+            totalField.setText(String.valueOf(currentTotal));
+
+            // Calculate the final amount considering the discount
+            int discountPercent = discountAmtField.getText().isEmpty() ? 0 : Integer.parseInt(discountAmtField.getText());
+            double discountAmount = (discountPercent / 100.0) * currentTotal;
+            double finalAmount = currentTotal - discountAmount;
+            finalAmtField.setText(String.format("%.2f", finalAmount));
+        } catch (NumberFormatException ex) {
+            // Handle the case where parsing fails
+            JOptionPane.showMessageDialog(null, "Please enter valid numbers for price and quantity.");
+        }
+    }
+});
 
         ArrayList<Object[]> dataList = new ArrayList<>();
         Object[][] data = new Object[dataList.size()][];
@@ -299,28 +301,28 @@ public class Billing extends JFrame {
 //        scrollPane.setBounds(500,80,900,350);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBounds(400, 500, 600, 280);
+        scrollPane.setBounds(400, 500, 440, 180);
         add(scrollPane);
 
         //Calculation detail
         total = new JLabel("Total");
-        total.setBounds(1100, 550, 100, 30);
+        total.setBounds(900, 500, 100, 30);
         add(total);
 
         totalField = new JTextField();
-        totalField.setBounds(1200, 550, 230, 30);
+        totalField.setBounds(1100, 500, 230, 30);
         add(totalField);
 
         discountAmt = new JLabel("Discount");
-        discountAmt.setBounds(1100, 615, 100, 30);
+        discountAmt.setBounds(900, 540, 100, 30);
         add(discountAmt);
 
         discountAmtField = new JTextField();
-        discountAmtField.setBounds(1200, 615, 100, 30);
+        discountAmtField.setBounds(1100, 540, 100, 30);
         add(discountAmtField);
 
         JButton disButton = new JButton("calculate");
-        disButton.setBounds(1320, 615, 110, 30);
+        disButton.setBounds(1220, 540, 110, 30);
         add(disButton);
 
         disButton.addActionListener(new ActionListener() {
@@ -337,11 +339,11 @@ public class Billing extends JFrame {
         });
 
         finalAmt = new JLabel("Final Amount");
-        finalAmt.setBounds(1100, 680, 100, 30);
+        finalAmt.setBounds(900, 580, 100, 30);
         add(finalAmt);
 
         finalAmtField = new JTextField();
-        finalAmtField.setBounds(1200, 680, 230, 30);
+        finalAmtField.setBounds(1100, 580, 230, 30);
         add(finalAmtField);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -350,42 +352,134 @@ public class Billing extends JFrame {
         setVisible(true);
 
         JButton print = new JButton("Print");
-        print.setBounds(1100, 670, 130, 30);
+        print.setBounds(1100, 620, 100, 30);
         add(print);
-        print.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String name = custname.getSelectedItem();
-                String address = addressField.getText();
-                String email = emailField.getText();
-                String phone = phoneField.getText();
-                String productname = prodname.getSelectedItem();
-                String quantity = quantityField.getText();
-                String total = totalField.getText();
-                String discount = discountAmtField.getText();
-                String finalAmount = finalAmtField.getText();
+print.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        String name = custname.getSelectedItem();
+        String address = addressField.getText();
+        String email = emailField.getText();
+        String phone = phoneField.getText();
+        String total = totalField.getText();
+        String discount = discountAmtField.getText();
+        String finalAmount = finalAmtField.getText();
 
-                String path = "D://";
-                com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
-                try {
-                    PdfWriter.getInstance(doc, new FileOutputStream(path + "" + name + ".pdf"));
-                    doc.open();
-                    Paragraph paragraph1 = new Paragraph("                 Billing Management System\n             ");
-                    doc.add(paragraph1);
-                    Paragraph paragraph2 = new Paragraph("Date & Time: " + curdateField.getText() + "  " + curHourField.getText() + " \n Buyer Details:\n Name: " + name + "\n Address " + address + " \n Email " + email + " \n Phone " + phone + " \n Product Name " + productname + "\n  Quantity " + quantity + "\n  Total " + total + "\n  Discount " + discount + "\n  Final Amount " + finalAmount);
-                    doc.add(paragraph2);
+        String path = "D://";
+        com.itextpdf.text.Document doc = new com.itextpdf.text.Document();
+        try {
+            PdfWriter.getInstance(doc, new FileOutputStream(path + name + ".pdf"));
+            doc.open();
 
-                    JOptionPane.showMessageDialog(null, "Bill Generated");
-                    setVisible(true);
+            // Adding the title with proper spacing and alignment
+            Paragraph title = new Paragraph("Billing Management System",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, Font.BOLD, BaseColor.BLACK));
+            title.setAlignment(Element.ALIGN_CENTER);
+            doc.add(title);
 
-                } catch (Exception ee) {
-                    JOptionPane.showMessageDialog(null, e);
-                }
-                doc.close();
+            // Adding a blank line after the title
+            doc.add(new Paragraph("\n"));
+
+            // Adding date and time information
+            Paragraph dateTime = new Paragraph("Date: " + curdateField.getText() + "  |  Time: " + curHourField.getText(),
+                    FontFactory.getFont(FontFactory.HELVETICA, 12));
+            dateTime.setAlignment(Element.ALIGN_RIGHT);
+            doc.add(dateTime);
+
+            // Adding a blank line
+            doc.add(new Paragraph("\n"));
+
+            // Adding buyer details
+            Paragraph buyerDetails = new Paragraph("Buyer Details:\n"
+                    + "Name: " + name + "\n"
+                    + "Address: " + address + "\n"
+                    + "Email: " + email + "\n"
+                    + "Phone: " + phone,
+                    FontFactory.getFont(FontFactory.HELVETICA, 12));
+            doc.add(buyerDetails);
+
+            // Adding a blank line
+            doc.add(new Paragraph("\n"));
+
+            // Adding product and payment details in a table
+            PdfPTable pdfTable = new PdfPTable(5); // 5 columns
+
+            // Adding table headers
+            pdfTable.addCell(new PdfPCell(new Paragraph("Product Name", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
+            pdfTable.addCell(new PdfPCell(new Paragraph("Quantity", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
+            pdfTable.addCell(new PdfPCell(new Paragraph("Price", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
+            pdfTable.addCell(new PdfPCell(new Paragraph("Total", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
+            pdfTable.addCell(new PdfPCell(new Paragraph("Discount", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
+
+            // Access the JTable model
+            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            int totalAmount = 0;
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String productName = model.getValueAt(i, 1).toString(); // Product Name
+                String quantityStr = model.getValueAt(i, 3).toString(); // Quantity
+                String priceStr = model.getValueAt(i, 2).toString(); // Price
+                int quantityInt = Integer.parseInt(quantityStr);
+                int priceInt = Integer.parseInt(priceStr);
+                int totalItems = quantityInt * priceInt;
+                totalAmount += totalItems;
+
+                pdfTable.addCell(productName);
+                pdfTable.addCell(quantityStr);
+                pdfTable.addCell(priceStr);
+                pdfTable.addCell(String.valueOf(totalItems));
+                pdfTable.addCell(""); // Discount cell will be empty in the table
             }
-        });
+
+            // Adding summary
+            pdfTable.addCell("Total Amount:");
+            pdfTable.addCell("");
+            pdfTable.addCell("");
+            pdfTable.addCell(String.valueOf(totalAmount));
+            pdfTable.addCell("");
+
+            // Calculate and add discount and final amount
+            int discountPercent = discountAmtField.getText().isEmpty() ? 0 : Integer.parseInt(discountAmtField.getText());
+            double discountAmount = (discountPercent / 100.0) * totalAmount;
+            double finalAmt = totalAmount - discountAmount;
+
+            pdfTable.addCell("Discount:");
+            pdfTable.addCell("");
+            pdfTable.addCell("");
+            pdfTable.addCell(String.valueOf(discountAmount));
+            pdfTable.addCell("");
+
+            pdfTable.addCell("Final Amount:");
+            pdfTable.addCell("");
+            pdfTable.addCell("");
+            pdfTable.addCell(String.format("%.2f", finalAmt));
+            pdfTable.addCell("");
+
+            doc.add(pdfTable);
+
+            // Adding a blank line
+            doc.add(new Paragraph("\n"));
+
+            // Adding a thank you note
+            Paragraph thankYou = new Paragraph("Thank you for your purchase!",
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
+            thankYou.setAlignment(Element.ALIGN_CENTER);
+            doc.add(thankYou);
+
+            // Closing the document
+            doc.close();
+
+            JOptionPane.showMessageDialog(null, "Bill Generated Successfully");
+            setVisible(true);
+
+        } catch (Exception ee) {
+            JOptionPane.showMessageDialog(null, "Error generating bill: " + ee.getMessage());
+        }
+    }
+});
+
+
 
         JButton reset = new JButton("Reset");
-        reset.setBounds(1300, 750, 130, 30);
+        reset.setBounds(1230, 620, 100, 30);
         add(reset);
         reset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
