@@ -354,6 +354,7 @@ public class Billing extends JFrame {
         JButton print = new JButton("Print");
         print.setBounds(1100, 620, 100, 30);
         add(print);
+        
 print.addActionListener(new ActionListener() {
     public void actionPerformed(ActionEvent e) {
         String name = custname.getSelectedItem();
@@ -370,25 +371,20 @@ print.addActionListener(new ActionListener() {
             PdfWriter.getInstance(doc, new FileOutputStream(path + name + ".pdf"));
             doc.open();
 
-            // Adding the title with proper spacing and alignment
             Paragraph title = new Paragraph("Billing Management System",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, Font.BOLD, BaseColor.BLACK));
             title.setAlignment(Element.ALIGN_CENTER);
             doc.add(title);
 
-            // Adding a blank line after the title
             doc.add(new Paragraph("\n"));
 
-            // Adding date and time information
             Paragraph dateTime = new Paragraph("Date: " + curdateField.getText() + "  |  Time: " + curHourField.getText(),
                     FontFactory.getFont(FontFactory.HELVETICA, 12));
             dateTime.setAlignment(Element.ALIGN_RIGHT);
             doc.add(dateTime);
 
-            // Adding a blank line
             doc.add(new Paragraph("\n"));
 
-            // Adding buyer details
             Paragraph buyerDetails = new Paragraph("Buyer Details:\n"
                     + "Name: " + name + "\n"
                     + "Address: " + address + "\n"
@@ -397,22 +393,19 @@ print.addActionListener(new ActionListener() {
                     FontFactory.getFont(FontFactory.HELVETICA, 12));
             doc.add(buyerDetails);
 
-            // Adding a blank line
             doc.add(new Paragraph("\n"));
 
-            // Adding product and payment details in a table
             PdfPTable pdfTable = new PdfPTable(5); // 5 columns
 
-            // Adding table headers
             pdfTable.addCell(new PdfPCell(new Paragraph("Product Name", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
             pdfTable.addCell(new PdfPCell(new Paragraph("Quantity", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
             pdfTable.addCell(new PdfPCell(new Paragraph("Price", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
             pdfTable.addCell(new PdfPCell(new Paragraph("Total", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
             pdfTable.addCell(new PdfPCell(new Paragraph("Discount", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12))));
 
-            // Access the JTable model
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             int totalAmount = 0;
+            StringBuilder allProducts = new StringBuilder();
             for (int i = 0; i < model.getRowCount(); i++) {
                 String productName = model.getValueAt(i, 1).toString(); // Product Name
                 String quantityStr = model.getValueAt(i, 3).toString(); // Quantity
@@ -422,21 +415,24 @@ print.addActionListener(new ActionListener() {
                 int totalItems = quantityInt * priceInt;
                 totalAmount += totalItems;
 
-                pdfTable.addCell(productName);
+                // Format product name with quantity
+                String formattedProductName = productName + "(" + quantityInt + ")";
+                allProducts.append(formattedProductName).append(", ");
+
+                pdfTable.addCell(formattedProductName);
                 pdfTable.addCell(quantityStr);
                 pdfTable.addCell(priceStr);
                 pdfTable.addCell(String.valueOf(totalItems));
                 pdfTable.addCell(""); // Discount cell will be empty in the table
             }
 
-            // Adding summary
-            pdfTable.addCell("Total Amount:");
-            pdfTable.addCell("");
-            pdfTable.addCell("");
+            // Add accumulated product details as a single cell
+            pdfTable.addCell(allProducts.toString().replaceAll(", $", ""));
+            pdfTable.addCell(""); // Empty cell for quantity
+            pdfTable.addCell(""); // Empty cell for price
             pdfTable.addCell(String.valueOf(totalAmount));
-            pdfTable.addCell("");
+            pdfTable.addCell(""); // Empty cell for discount
 
-            // Calculate and add discount and final amount
             int discountPercent = discountAmtField.getText().isEmpty() ? 0 : Integer.parseInt(discountAmtField.getText());
             double discountAmount = (discountPercent / 100.0) * totalAmount;
             double finalAmt = totalAmount - discountAmount;
@@ -455,17 +451,33 @@ print.addActionListener(new ActionListener() {
 
             doc.add(pdfTable);
 
-            // Adding a blank line
             doc.add(new Paragraph("\n"));
 
-            // Adding a thank you note
             Paragraph thankYou = new Paragraph("Thank you for your purchase!",
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12));
             thankYou.setAlignment(Element.ALIGN_CENTER);
             doc.add(thankYou);
 
-            // Closing the document
             doc.close();
+
+            // Update product stock and history
+            Conn c = new Conn();
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String productName = model.getValueAt(i, 1).toString();
+                int quantityInt = Integer.parseInt(model.getValueAt(i, 3).toString());
+
+                String updateProductQuery = "UPDATE product SET stock = stock - " + quantityInt +
+                        " WHERE productName = '" + productName + "'";
+                c.s.executeUpdate(updateProductQuery);
+            }
+
+            // Insert into history with all products in one entry
+            String historyQuery = "INSERT INTO history (customerName, productName, price, total, date) VALUES ('"
+                    + name + "', '" + allProducts.toString().replaceAll(", $", "") + "', "
+                    + totalAmount + ", "
+                    + totalAmount + ", '"
+                    + curdateField.getText() + "')";
+            c.s.executeUpdate(historyQuery);
 
             JOptionPane.showMessageDialog(null, "Bill Generated Successfully");
             setVisible(true);
@@ -476,18 +488,6 @@ print.addActionListener(new ActionListener() {
     }
 });
 
-
-
-        JButton reset = new JButton("Reset");
-        reset.setBounds(1230, 620, 100, 30);
-        add(reset);
-        reset.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                discountAmtField.setText("");
-                finalAmtField.setText("");
-
-            }
-        });
     }
 
     public static void main(String[] args) {
