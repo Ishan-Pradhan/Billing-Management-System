@@ -93,7 +93,7 @@ public class UpdateProduct extends JFrame {
 
             try {
                 Conn c = new Conn();
-                String query = "UPDATE product SET product_name='" + updatedProName + "', product_description='" + updatedDescription + "', product_price='" + updatedPrice + "', product_stock='" + updatedStock + "' WHERE product_id='" + updatedProductId + "'";
+                String query = "UPDATE product SET productName='" + updatedProName + "', description='" + updatedDescription + "', price='" + updatedPrice + "', stock='" + updatedStock + "' WHERE productId='" + updatedProductId + "'";
                 
                 int rowsUpdated = c.s.executeUpdate(query);
 

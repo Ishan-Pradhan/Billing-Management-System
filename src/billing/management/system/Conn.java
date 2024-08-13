@@ -6,7 +6,7 @@ import java.sql.*;
 public class Conn {
 
     Connection c;
-    Statement s;
+    public Statement s;
     
     public Conn(){
         try{

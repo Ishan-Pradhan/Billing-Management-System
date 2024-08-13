@@ -1,8 +1,17 @@
 package billing.management.system;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.BarRenderer;
+
 import javax.swing.*;
 import java.awt.*;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Home extends JFrame {
 
@@ -25,12 +34,11 @@ public class Home extends JFrame {
         welcome.setFont(new Font("Tahoma", Font.PLAIN, 24));
         add(welcome);
 
-     
         JPanel totalProductsPanel = new JPanel();
         totalProductsPanel.setBounds(400, 120, 250, 100);
         totalProductsPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         totalProductsPanel.setLayout(null);
-        
+
         ImageIcon totalProductsIcon = new ImageIcon(ClassLoader.getSystemResource("icons/product.png"));
         Image totalProductsImg = totalProductsIcon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT);
         totalProductsIcon = new ImageIcon(totalProductsImg);
@@ -44,7 +52,6 @@ public class Home extends JFrame {
 
         add(totalProductsPanel);
 
-        
         JPanel totalCustomersPanel = new JPanel();
         totalCustomersPanel.setBounds(700, 120, 250, 100);
         totalCustomersPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -64,8 +71,14 @@ public class Home extends JFrame {
 
         add(totalCustomersPanel);
 
+        // Fetch total products and customers
         fetchTotalProducts();
         fetchTotalCustomers();
+
+        // Add the sales chart panel
+        JPanel chartPanel = createSalesChartPanel();
+        chartPanel.setBounds(400, 250, 550, 350);
+        add(chartPanel);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(width, height);
@@ -99,6 +112,43 @@ public class Home extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private JPanel createSalesChartPanel() {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        // Fetch sales data from the history table
+        try {
+            Conn c = new Conn();
+            String query = "SELECT date, SUM(total) as sales FROM history GROUP BY date";
+            ResultSet rs = c.s.executeQuery(query);
+
+            while (rs.next()) {
+                String date = rs.getString("date");
+                double sales = rs.getDouble("sales");
+                dataset.addValue(sales, "Sales", date);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Create a bar chart
+        JFreeChart barChart = ChartFactory.createBarChart(
+                "Sales History",
+                "Date",
+                "Sales (in Rs.)",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true, true, false
+        );
+
+        // Customize the plot
+        CategoryPlot plot = barChart.getCategoryPlot();
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
+        renderer.setSeriesPaint(0, Color.BLUE); // Set the color of the bars to blue
+
+        // Wrap the chart in a panel
+        return new ChartPanel(barChart);
     }
 
     public static void main(String[] args) {

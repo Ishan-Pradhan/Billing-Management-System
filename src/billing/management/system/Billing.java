@@ -472,9 +472,8 @@ print.addActionListener(new ActionListener() {
             }
 
             // Insert into history with all products in one entry
-            String historyQuery = "INSERT INTO history (customerName, productName, price, total, date) VALUES ('"
+            String historyQuery = "INSERT INTO history (customerName, productName, total, date) VALUES ('"
                     + name + "', '" + allProducts.toString().replaceAll(", $", "") + "', "
-                    + totalAmount + ", "
                     + totalAmount + ", '"
                     + curdateField.getText() + "')";
             c.s.executeUpdate(historyQuery);
