@@ -313,7 +313,7 @@ public class Billing extends JFrame {
         totalField.setBounds(1100, 500, 230, 30);
         add(totalField);
 
-        discountAmt = new JLabel("Discount");
+        discountAmt = new JLabel("Discount in %");
         discountAmt.setBounds(900, 540, 100, 30);
         add(discountAmt);
 
